@@ -54,11 +54,11 @@ def validate_twilio_request():
         @wraps(f)
         def decorated(*args, **kwargs):
             validator = RequestValidator(TWILIO_AUTH_TOKEN)
-            https_url = 'https://' + request.url.lstrip('http://') # request.url shows http when https is used, so we need to fix it
+            https_url = 'https://' + request.url.lstrip('http://') # with ngrok, request.url shows http when https is used, so we need to fix it
             twilio_signature = request.headers.get('X-Twilio-Signature')
             params = request.form
             if not twilio_signature:
-                return Response('No signature', 500)  
+                return Response('No signature', 400)  
             elif not validator.validate(https_url, params, twilio_signature):
                 return Response('Incorrect signature', 403)
             return f(*args, **kwargs)
@@ -87,7 +87,7 @@ def twiml():
     # 2. If the request is a POST, sort all of the POST parameters alphabetically (using Unix-style case-sensitive sorting order).
     # 3. Iterate through the sorted list of POST parameters, and append the variable name and value (with no delimiters) to the end of the URL string.
     #   Side Note:
-    #       As an additional protective measure against request forgeries, we should reject requests without any form params
+    #       As an additional protective measure, we should reject requests without any form params
     if request.form:
         for k, v in sorted(request.form.items()):
             domain += k + v
@@ -102,7 +102,7 @@ def twiml():
     # 5. Base64 encode the resulting hash value.
     computed = base64.b64encode(mac.digest()) 
     print(f"computed value (base64 encoded): {computed}")
-    computed = computed.decode('utf-8') # still binary, so let's make it readable??
+    computed = computed.decode('utf-8') # make it readable
     print(f"computed value (utf-8 decoded): {computed}")
     diy_signature = computed.strip() # strip() removes any leading and trailing spaces - https://www.w3schools.com/python/ref_string_strip.asp
     print(f"diy_signature value: {diy_signature}")
@@ -124,10 +124,10 @@ def decorator_test():
 
 
 @app.route("/weather", methods=['POST'])
-#@validate_twilio_request()
+@validate_twilio_request()
 def weather():
     print('-' * 55)
-    # First, let's pull the location info from the incoming call webhook
+    # First, pull the location info from the incoming call webhook
     # https://www.twilio.com/docs/usage/webhooks/voice-webhooks#incoming-voice-call
     # https://www.twilio.com/docs/voice/twiml#twilios-request-to-your-application
     try:
