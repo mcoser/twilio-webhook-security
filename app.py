@@ -96,7 +96,6 @@ def twiml():
    
     # 4. Sign the resulting string with HMAC-SHA1 using your AuthToken as the key (remember, your AuthToken's case matters!).
     mac = hmac.new(bytes(TWILIO_AUTH_TOKEN, 'UTF-8'), domain.encode("utf-8"), sha1)
-    print(mac.__dict__)
     print(mac.digest())
 
     # 5. Base64 encode the resulting hash value.
